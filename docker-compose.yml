@@ -1,0 +1,79 @@
+###############################################################################
+# Gemini Sales Accelerator Core — Local Development Stack
+#
+# Usage:
+#   docker compose up          → Start all services (Postgres, Redis, API)
+#   docker compose up --build  → Rebuild after requirements.txt changes
+#   docker compose down -v     → Tear down + remove volumes
+#
+# The API container mounts ./api as a volume and runs uvicorn with --reload
+# so code changes are picked up instantly without rebuilding.
+###############################################################################
+
+services:
+  # ─── PostgreSQL 15 ────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: gsa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gsa_user
+      POSTGRES_PASSWORD: gsa_local_password
+      POSTGRES_DB: gsa_core
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gsa_user -d gsa_core"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── Redis 7 (Memorystore locally) ────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: gsa-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── FastAPI Application ──────────────────────────────────────────────
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: gsa-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+    environment:
+      # ── Database ──
+      DATABASE_URL: postgresql+asyncpg://gsa_user:gsa_local_password@postgres:5432/gsa_core
+      DATABASE_URL_SYNC: postgresql://gsa_user:gsa_local_password@postgres:5432/gsa_core
+      # ── Redis ──
+      REDIS_URL: redis://redis:6379/0
+      # ── Application ──
+      APP_ENV: development
+      API_KEY: gsa_dev_key_change_me_in_production
+      # ── GCP (placeholder — not used until agent wiring) ──
+      GCP_PROJECT_ID: your-gcp-project-id
+      GCP_LOCATION: us-central1
+      # ── Logging ──
+      LOG_LEVEL: DEBUG
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+    driver: local
