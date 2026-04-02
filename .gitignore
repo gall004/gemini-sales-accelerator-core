@@ -1,0 +1,80 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.whl
+
+# =========================
+# Virtual Environments
+# =========================
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.local
+.env.prod
+.env.*.local
+*.pem
+*.key
+*.p12
+*.jks
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Database
+# =========================
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+pgdata/
+
+# =========================
+# Testing & Coverage
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# =========================
+# Build Artifacts
+# =========================
+*.egg-info/
+dist/
+build/
+
+# =========================
+# Node (for Apps Script / clasp)
+# =========================
+node_modules/
+
+# =========================
+# Gemini Agent Artifacts
+# =========================
+.gemini/
