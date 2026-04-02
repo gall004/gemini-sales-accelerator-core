@@ -149,6 +149,19 @@ class BriefingGenerateRequest(BaseModel):
         description="Record ID from the source system (used for upsert matching)",
         examples=["row_42", "001Dn00000ABC123"],
     )
+    campaign_context: str | None = Field(
+        default=None,
+        max_length=2000,
+        description=(
+            "Campaign or product focus for the briefing. Drives dynamic AI "
+            "personalization of 'Why We Matter' and objection handling. "
+            "Example: 'Google Actions Center Integrations for Event Ticketing'"
+        ),
+        examples=[
+            "Google Actions Center Integrations for Event Ticketing",
+            "Cisco Contact Center Modernization with AI Agent Assist",
+        ],
+    )
 
     @field_validator("entity_type")
     @classmethod

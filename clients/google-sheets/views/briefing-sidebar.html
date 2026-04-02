@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <style>
+    /* ── Reset & Base ──────────────────────────────────────────── */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid #e8eaed;
+    }
+    .header-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #1a73e8, #8e44ef);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+    }
+    .header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1a2e;
+      letter-spacing: -0.3px;
+    }
+    .header p {
+      font-size: 11px;
+      color: #5f6368;
+      margin-top: 1px;
+    }
+
+    /* ── Cards ──────────────────────────────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      border: 1px solid #e8eaed;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #5f6368;
+    }
+    .card-header .material-icons-round {
+      font-size: 16px;
+      color: #1a73e8;
+    }
+
+    /* ── Score Card ─────────────────────────────────────────────── */
+    .score-card {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      border: none;
+    }
+    .score-card .card-header { color: rgba(255,255,255,0.7); }
+    .score-card .card-header .material-icons-round { color: rgba(255,255,255,0.9); }
+    .company-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+    .score-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .score-label { font-size: 11px; color: rgba(255,255,255,0.7); white-space: nowrap; }
+    .score-bar {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .score-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s ease;
+    }
+    .score-fill.high   { background: linear-gradient(90deg, #34a853, #0f9d58); }
+    .score-fill.medium { background: linear-gradient(90deg, #fbbc04, #f9a825); }
+    .score-fill.low    { background: linear-gradient(90deg, #ea4335, #d93025); }
+    .score-value {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .signal-text {
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.5;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+
+    /* ── Markdown Content ──────────────────────────────────────── */
+    .markdown-content h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 14px 0 8px;
+      color: #1a1a2e;
+    }
+    .markdown-content h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 10px 0 6px;
+      color: #3c4043;
+    }
+    .markdown-content p {
+      margin-bottom: 8px;
+      color: #3c4043;
+    }
+    .markdown-content ul, .markdown-content ol {
+      margin: 6px 0 10px 18px;
+      color: #3c4043;
+    }
+    .markdown-content li { margin-bottom: 4px; }
+    .markdown-content strong { font-weight: 600; color: #1a1a2e; }
+
+    /* ── Objection Card ────────────────────────────────────────── */
+    .objection-card { border-left: 3px solid #ea4335; }
+    .pivot-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #0f9d58;
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+    .pivot-text { color: #0f9d58; font-style: italic; }
+
+    /* ── Contact List ──────────────────────────────────────────── */
+    .contact-item {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f3f4;
+    }
+    .contact-item:last-child { border-bottom: none; }
+    .contact-icon {
+      width: 28px;
+      height: 28px;
+      background: #e8f0fe;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-icon .material-icons-round { font-size: 14px; color: #1a73e8; }
+    .contact-title { font-weight: 600; font-size: 12px; color: #1a1a2e; }
+    .contact-reason { font-size: 11px; color: #5f6368; margin-top: 2px; }
+
+    /* ── Footer / Meta ──────────────────────────────────────────── */
+    .meta-card {
+      background: #f1f3f4;
+      border: 1px solid #e8eaed;
+    }
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #5f6368;
+      margin-bottom: 4px;
+    }
+    .meta-row .material-icons-round { font-size: 14px; }
+    .cache-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .cache-fresh { background: #e6f4ea; color: #137333; }
+    .cache-cached { background: #e8f0fe; color: #1967d2; }
+
+    /* ── Refresh Button ────────────────────────────────────────── */
+    .refresh-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #fff;
+      border: 1.5px solid #dadce0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1a73e8;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .refresh-btn:hover {
+      background: #e8f0fe;
+      border-color: #1a73e8;
+    }
+    .refresh-btn:active { transform: scale(0.98); }
+    .refresh-btn .material-icons-round { font-size: 16px; }
+
+    /* ── Loading State ─────────────────────────────────────────── */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e8eaed;
+      border-top-color: #1a73e8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-size: 13px;
+      color: #5f6368;
+      font-weight: 500;
+    }
+    .loading-subtext {
+      font-size: 11px;
+      color: #80868b;
+      margin-top: 4px;
+    }
+
+    /* ── Error State ───────────────────────────────────────────── */
+    .error-card {
+      border-left: 3px solid #ea4335;
+      text-align: center;
+      padding: 24px 16px;
+    }
+    .error-card .material-icons-round {
+      font-size: 36px;
+      color: #ea4335;
+      margin-bottom: 10px;
+    }
+    .error-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    }
+    .error-message {
+      font-size: 12px;
+      color: #5f6368;
+      margin-bottom: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ── Loading State ─────────────────────────────────────────── -->
+  <div id="loading" class="loading-container">
+    <div class="spinner"></div>
+    <div class="loading-text">Generating your briefing...</div>
+    <div class="loading-subtext" id="loading-company"></div>
+  </div>
+
+  <!-- ── Error State ───────────────────────────────────────────── -->
+  <div id="error-view" style="display:none;">
+    <div class="card error-card">
+      <span class="material-icons-round">error_outline</span>
+      <div class="error-title">Briefing Unavailable</div>
+      <div class="error-message" id="error-message"></div>
+      <button class="refresh-btn" onclick="retryBriefing()">
+        <span class="material-icons-round">refresh</span> Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Briefing Content ──────────────────────────────────────── -->
+  <div id="briefing-view" style="display:none;">
+    <div class="header">
+      <div class="header-icon">
+        <span class="material-icons-round">bolt</span>
+      </div>
+      <div>
+        <h1>AI Sales Accelerator</h1>
+        <p>Powered by TTEC Digital</p>
+      </div>
+    </div>
+
+    <!-- Score Card -->
+    <div class="card score-card" id="score-card">
+      <div class="card-header">
+        <span class="material-icons-round">business</span> Account Overview
+      </div>
+      <div class="company-name" id="company-name"></div>
+      <div class="score-bar-container" id="score-section" style="display:none;">
+        <span class="score-label">P2B Score</span>
+        <div class="score-bar"><div class="score-fill" id="score-fill"></div></div>
+        <span class="score-value" id="score-value"></span>
+      </div>
+      <div class="signal-text" id="account-signal" style="display:none;"></div>
+    </div>
+
+    <!-- Strategic Briefing -->
+    <div class="card" id="briefing-card" style="display:none;">
+      <div class="card-header">
+        <span class="material-icons-round">description</span> Strategic Briefing
+      </div>
+      <div class="markdown-content" id="briefing-content"></div>
+    </div>
+
+    <!-- Contact Briefing -->
+    <div class="card" id="contact-card" style="display:none;">
+      <div class="card-header">
+        <span class="material-icons-round">person</span> Contact Briefing
+      </div>
+      <div class="markdown-content" id="contact-content"></div>
+    </div>
+
+    <!-- Why We Matter -->
+    <div class="card" id="why-card" style="display:none;">
+      <div class="card-header">
+        <span class="material-icons-round">lightbulb</span> Why We Matter
+      </div>
+      <div class="markdown-content" id="why-content"></div>
+    </div>
+
+    <!-- Anticipated Objection -->
+    <div class="card objection-card" id="objection-card" style="display:none;">
+      <div class="card-header">
+        <span class="material-icons-round">gpp_maybe</span> Anticipated Objection
+      </div>
+      <div id="objection-text" style="color:#3c4043;"></div>
+      <div class="pivot-label">
+        <span class="material-icons-round" style="font-size:12px;">swap_horiz</span> Pivot
+      </div>
+      <div class="pivot-text" id="pivot-text"></div>
+    </div>
+
+    <!-- Suggested Contacts -->
+    <div class="card" id="contacts-card" style="display:none;">
+      <div class="card-header">
+        <span class="material-icons-round">group</span> Suggested Contacts
+      </div>
+      <div id="contacts-list"></div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="card meta-card" id="meta-card">
+      <div class="meta-row">
+        <span class="material-icons-round">schedule</span>
+        Generated: <span id="meta-generated"></span>
+      </div>
+      <div class="meta-row">
+        <span class="material-icons-round">inventory_2</span>
+        Cache: <span id="meta-cache"></span>
+      </div>
+      <button class="refresh-btn" onclick="forceRefresh()">
+        <span class="material-icons-round">refresh</span> Force Refresh
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* ── Initialization ──────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function() {
+      loadBriefing();
+    });
+
+    function loadBriefing() {
+      showLoading();
+      google.script.run
+        .withSuccessHandler(renderBriefing)
+        .withFailureHandler(showError)
+        .fetchBriefingForSidebar();
+    }
+
+    function retryBriefing() {
+      loadBriefing();
+    }
+
+    function forceRefresh() {
+      showLoading();
+      google.script.run
+        .withSuccessHandler(renderBriefing)
+        .withFailureHandler(showError)
+        .forceRefreshBriefing();
+    }
+
+    /* ── State Management ────────────────────────────────────── */
+    function showLoading() {
+      document.getElementById('loading').style.display = 'flex';
+      document.getElementById('error-view').style.display = 'none';
+      document.getElementById('briefing-view').style.display = 'none';
+    }
+
+    function showError(err) {
+      var message = (typeof err === 'object' && err.message) ? err.message : String(err);
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-view').style.display = 'block';
+      document.getElementById('briefing-view').style.display = 'none';
+      document.getElementById('error-message').textContent = message;
+    }
+
+    /* ── Render Briefing ─────────────────────────────────────── */
+    function renderBriefing(data) {
+      if (!data) {
+        showError({ message: 'No response received from the API.' });
+        return;
+      }
+      if (data.error) {
+        showError(data);
+        return;
+      }
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-view').style.display = 'none';
+      document.getElementById('briefing-view').style.display = 'block';
+
+      /* Company Name */
+      document.getElementById('company-name').textContent =
+        data.entity_type === 'account' ? 'Account Briefing' : 'Briefing';
+
+      /* P2B Score */
+      if (data.p2b_score !== null && data.p2b_score !== undefined) {
+        document.getElementById('score-section').style.display = 'flex';
+        var score = data.p2b_score;
+        var fill = document.getElementById('score-fill');
+        fill.style.width = score + '%';
+        fill.className = 'score-fill ' + (score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low');
+        document.getElementById('score-value').textContent = score + '/100';
+      }
+
+      /* Account Signal */
+      if (data.account_signal) {
+        var signalEl = document.getElementById('account-signal');
+        signalEl.style.display = 'block';
+        signalEl.innerHTML = '<strong>📡 Signal:</strong> ' + escapeHtml(data.account_signal);
+      }
+
+      /* Strategic Briefing */
+      if (data.briefing_markdown) {
+        document.getElementById('briefing-card').style.display = 'block';
+        document.getElementById('briefing-content').innerHTML = renderMarkdown(data.briefing_markdown);
+      }
+
+      /* Contact Briefing */
+      if (data.contact_briefing_markdown) {
+        document.getElementById('contact-card').style.display = 'block';
+        document.getElementById('contact-content').innerHTML = renderMarkdown(data.contact_briefing_markdown);
+      }
+
+      /* Why We Matter */
+      if (data.why_we_matter) {
+        document.getElementById('why-card').style.display = 'block';
+        document.getElementById('why-content').innerHTML = renderMarkdown(data.why_we_matter);
+      }
+
+      /* Anticipated Objection */
+      if (data.anticipated_objection) {
+        document.getElementById('objection-card').style.display = 'block';
+        document.getElementById('objection-text').innerHTML =
+          '&ldquo;' + escapeHtml(data.anticipated_objection) + '&rdquo;';
+        if (data.objection_pivot) {
+          document.getElementById('pivot-text').innerHTML = escapeHtml(data.objection_pivot);
+        }
+      }
+
+      /* Suggested Contacts */
+      if (data.suggested_contacts && data.suggested_contacts.length > 0) {
+        document.getElementById('contacts-card').style.display = 'block';
+        var html = '';
+        data.suggested_contacts.forEach(function(c) {
+          html += '<div class="contact-item">' +
+            '<div class="contact-icon"><span class="material-icons-round">person</span></div>' +
+            '<div>' +
+              '<div class="contact-title">' + escapeHtml(c.title) + '</div>' +
+              '<div class="contact-reason">' + escapeHtml(c.reason) + '</div>' +
+            '</div></div>';
+        });
+        document.getElementById('contacts-list').innerHTML = html;
+      }
+
+      /* Metadata */
+      if (data.generated_at) {
+        document.getElementById('meta-generated').textContent = formatDate(data.generated_at);
+      }
+      var cacheBadge = data.cache_hit
+        ? '<span class="cache-badge cache-cached">Cached</span>'
+        : '<span class="cache-badge cache-fresh">Fresh</span>';
+      if (data.expires_at) {
+        cacheBadge += ' — expires ' + formatDate(data.expires_at);
+      }
+      document.getElementById('meta-cache').innerHTML = cacheBadge;
+    }
+
+    /* ── Markdown Renderer (lightweight) ─────────────────────── */
+    function renderMarkdown(text) {
+      if (!text) return '';
+      var html = escapeHtml(text);
+      /* Headers */
+      html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      /* Bold */
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      /* Italic */
+      html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+      /* Unordered lists */
+      html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+      /* Ordered lists */
+      html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+      /* Line breaks → paragraphs */
+      html = html.replace(/\n\n/g, '</p><p>');
+      html = html.replace(/\n/g, '<br>');
+      html = '<p>' + html + '</p>';
+      /* Clean up empty paragraphs */
+      html = html.replace(/<p>\s*<\/p>/g, '');
+      html = html.replace(/<p>\s*(<h[34]>)/g, '$1');
+      html = html.replace(/(<\/h[34]>)\s*<\/p>/g, '$1');
+      html = html.replace(/<p>\s*(<ul>)/g, '$1');
+      html = html.replace(/(<\/ul>)\s*<\/p>/g, '$1');
+      return html;
+    }
+
+    /* ── Utilities ────────────────────────────────────────────── */
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(text));
+      return div.innerHTML;
+    }
+
+    function formatDate(isoString) {
+      try {
+        var d = new Date(isoString);
+        return d.toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: 'numeric', minute: '2-digit'
+        });
+      } catch (e) {
+        return isoString;
+      }
+    }
+  </script>
+</body>
+</html>
