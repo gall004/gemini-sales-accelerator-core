@@ -25,6 +25,7 @@ def deploy(
     model_name: str = "gemini-3-flash-preview",
     display_name: str = "Briefing Agent",
     staging_bucket: str | None = None,
+    agent_id: str | None = None,
 ) -> str:
     """Deploy the BriefingAgent to Vertex AI Reasoning Engine.
 
@@ -35,6 +36,8 @@ def deploy(
         display_name: Display name in the GCP console.
         staging_bucket: GCS bucket for staging artifacts (gs://...).
             Defaults to gs://{project_id}-gsa-staging.
+        agent_id: Optional ID of an existing agent. If provided, updates
+            the existing agent in-place rather than creating a new one.
 
     Returns:
         The Reasoning Engine resource name (contains the agent_id).
@@ -55,21 +58,35 @@ def deploy(
         model_name=model_name,
     )
 
-    remote_agent = reasoning_engines.ReasoningEngine.create(
-        agent,
-        requirements=[
-            "google-cloud-aiplatform[reasoningengine,langchain]>=1.86.0",
-            "google-genai>=1.51.0",
-        ],
-        extra_packages=["agent.py"],
-        display_name=display_name,
-        description=(
-            "Strategic sales intelligence agent with Google Search "
-            "grounding. Generates structured briefings for CRM enrichment."
-        ),
-    )
+    requirements = [
+        "google-cloud-aiplatform[reasoningengine,langchain]>=1.86.0",
+        "google-genai>=1.51.0",
+    ]
+    extra_packages = ["agent.py"]
 
-    print(f"\n✅ Agent deployed successfully!")
+    if agent_id:
+        print(f"🔄 Updating existing ReasoningEngine ({agent_id})...")
+        remote_agent = reasoning_engines.ReasoningEngine(agent_id)
+        remote_agent.update(
+            reasoning_engine=agent,
+            requirements=requirements,
+            extra_packages=extra_packages,
+        )
+        print(f"\n✅ Agent updated successfully!")
+    else:
+        print("🆕 Creating new ReasoningEngine...")
+        remote_agent = reasoning_engines.ReasoningEngine.create(
+            agent,
+            requirements=requirements,
+            extra_packages=extra_packages,
+            display_name=display_name,
+            description=(
+                "Strategic sales intelligence agent with Google Search "
+                "grounding. Generates structured briefings for CRM enrichment."
+            ),
+        )
+        print(f"\n✅ Agent created successfully!")
+
     print(f"   Resource Name: {remote_agent.resource_name}")
 
     # Extract numeric ID from resource name
@@ -103,6 +120,10 @@ if __name__ == "__main__":
         "--staging-bucket", default=None,
         help="GCS bucket for staging (gs://...). Defaults to gs://{project-id}-gsa-staging",
     )
+    parser.add_argument(
+        "--agent-id", default=None,
+        help="Optional existing Agent ID to update in-place.",
+    )
     args = parser.parse_args()
 
     deploy(
@@ -111,4 +132,5 @@ if __name__ == "__main__":
         model_name=args.model_name,
         display_name=args.display_name,
         staging_bucket=args.staging_bucket,
+        agent_id=args.agent_id,
     )
