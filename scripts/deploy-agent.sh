@@ -69,7 +69,24 @@ fi
 # ── Auto-inject GCP args if not explicitly provided ──
 EXTRA_ARGS=()
 
-# Only inject --project-id if the user didn't provide it
+# Detect --create-new flag
+CREATE_NEW=false
+NEW_ARGS=()
+for arg in "$@"; do
+    if [[ "$arg" == "--create-new" ]]; then
+        CREATE_NEW=true
+    else
+        NEW_ARGS+=("$arg")
+    fi
+done
+
+if [[ ${#NEW_ARGS[@]} -eq 0 ]]; then
+    set --
+else
+    set -- "${NEW_ARGS[@]}"
+fi
+
+# 1. Project ID
 if ! echo "$*" | grep -q -- "--project-id"; then
     if [[ -n "${GCP_PROJECT_ID:-}" && "$GCP_PROJECT_ID" != "your-gcp-project-id" ]]; then
         EXTRA_ARGS+=("--project-id" "$GCP_PROJECT_ID")
@@ -77,11 +94,26 @@ if ! echo "$*" | grep -q -- "--project-id"; then
     fi
 fi
 
-# Only inject --location if the user didn't provide it
+# 2. Location
 if ! echo "$*" | grep -q -- "--location"; then
     if [[ -n "${GCP_LOCATION:-}" ]]; then
         EXTRA_ARGS+=("--location" "$GCP_LOCATION")
         echo "   Using GCP_LOCATION=$GCP_LOCATION from .env"
+    fi
+fi
+
+# 3. Agent ID (for in-place updates)
+if ! echo "$*" | grep -q -- "--agent-id" && [ "$CREATE_NEW" = false ]; then
+    # Convert 'briefing-agent' -> 'BRIEFING_AGENT_ENGINE_ID'
+    ENV_VAR_NAME="$(echo "$AGENT_NAME" | tr '[:lower:]-' '[:upper:]_')_ENGINE_ID"
+    # Read the value from the environment safely
+    AGENT_ID_VAL="${!ENV_VAR_NAME:-}"
+    
+    if [[ -n "$AGENT_ID_VAL" ]]; then
+        EXTRA_ARGS+=("--agent-id" "$AGENT_ID_VAL")
+        echo "   Found $ENV_VAR_NAME=$AGENT_ID_VAL in .env"
+        echo "   -> Will perform an IN-PLACE UPDATE of this agent."
+        echo "   -> (Pass --create-new to skip this and create a new agent instead)"
     fi
 fi
 
