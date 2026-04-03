@@ -4,14 +4,18 @@
 #
 # Usage:
 #   ./scripts/deploy-agent.sh briefing-agent
-#   ./scripts/deploy-agent.sh briefing-agent --project-id my-project
+#   ./scripts/deploy-agent.sh briefing-agent --project-id override-project
+#
+# GCP_PROJECT_ID and GCP_LOCATION are auto-read from the root .env file.
+# Explicitly passed args (--project-id, --location) take precedence.
 #
 # What it does:
-#   1. Navigates to examples/vertex-agents/$AGENT_NAME
-#   2. Creates an isolated .venv
-#   3. Installs requirements.txt
-#   4. Runs deploy.py (forwarding extra args)
-#   5. Cleans up and returns to the project root
+#   1. Sources root .env for GCP config
+#   2. Navigates to examples/vertex-agents/$AGENT_NAME
+#   3. Creates an isolated .venv
+#   4. Installs requirements.txt
+#   5. Runs deploy.py (forwarding extra args)
+#   6. Cleans up and returns to the project root
 # =============================================================================
 
 set -euo pipefail
@@ -51,7 +55,38 @@ if [[ ! -f "$AGENT_DIR/requirements.txt" ]]; then
     exit 1
 fi
 
+# ── Load root .env ──
+ENV_FILE="$PROJECT_ROOT/.env"
+if [[ -f "$ENV_FILE" ]]; then
+    echo "📄 Loading config from .env"
+    set -a
+    source "$ENV_FILE"
+    set +a
+else
+    echo "⚠️  No .env found at project root. GCP vars must be passed as args."
+fi
+
+# ── Auto-inject GCP args if not explicitly provided ──
+EXTRA_ARGS=()
+
+# Only inject --project-id if the user didn't provide it
+if ! echo "$*" | grep -q -- "--project-id"; then
+    if [[ -n "${GCP_PROJECT_ID:-}" && "$GCP_PROJECT_ID" != "your-gcp-project-id" ]]; then
+        EXTRA_ARGS+=("--project-id" "$GCP_PROJECT_ID")
+        echo "   Using GCP_PROJECT_ID=$GCP_PROJECT_ID from .env"
+    fi
+fi
+
+# Only inject --location if the user didn't provide it
+if ! echo "$*" | grep -q -- "--location"; then
+    if [[ -n "${GCP_LOCATION:-}" ]]; then
+        EXTRA_ARGS+=("--location" "$GCP_LOCATION")
+        echo "   Using GCP_LOCATION=$GCP_LOCATION from .env"
+    fi
+fi
+
 # ── Deploy ──
+echo ""
 echo "🚀 Deploying agent: $AGENT_NAME"
 echo "   Directory: $AGENT_DIR"
 echo ""
@@ -67,7 +102,7 @@ pip install -q -r requirements.txt
 
 echo ""
 echo "🤖 Running deploy.py..."
-python deploy.py "$@"
+python deploy.py "${EXTRA_ARGS[@]}" "$@"
 
 # ── Cleanup ──
 deactivate
