@@ -61,6 +61,7 @@ def deploy(
             "google-cloud-aiplatform[reasoningengine,langchain]>=1.86.0",
             "google-genai>=1.51.0",
         ],
+        extra_packages=["agent.py"],
         display_name=display_name,
         description=(
             "Strategic sales intelligence agent with Google Search "
