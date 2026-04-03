@@ -78,7 +78,7 @@ A headless AI Enterprise Platform that generates AI-powered Strategic Sales Brie
 Copy the example env file and configure for your local setup:
 
 ```bash
-cp api/.env.example api/.env
+cp .env.example .env
 ```
 
 ### Environment Variables
@@ -103,7 +103,15 @@ cp api/.env.example api/.env
 
 ## Local Development
 
-Start all services with a single command:
+### Quick Start (Recommended)
+
+```bash
+./scripts/setup-local.sh
+```
+
+This checks for `.env`, verifies Docker is running, and starts all services.
+
+### Manual Start
 
 ```bash
 docker compose up
@@ -130,6 +138,14 @@ docker compose up --build
 ```bash
 docker compose down -v
 ```
+
+### Deploy a Vertex AI Agent
+
+```bash
+./scripts/deploy-agent.sh briefing-agent
+```
+
+This creates an isolated `.venv`, installs dependencies, runs `deploy.py`, and cleans up automatically.
 
 ---
 
@@ -386,7 +402,6 @@ gemini-sales-accelerator-core/
 │   │   │   └── telemetry.py         # AI usage logging to ai_usage_logs
 │   │   └── utils/          # Shared utilities
 │   ├── tests/              # pytest test suite (39 tests, 85% coverage)
-│   ├── .env.example        # Environment variable template
 │   ├── Dockerfile          # Dev container (Python 3.12-slim)
 │   ├── pyproject.toml      # Pytest configuration
 │   └── requirements.txt    # Pinned Python dependencies
@@ -404,7 +419,10 @@ gemini-sales-accelerator-core/
 ├── intelligence/           # (Reserved) Vertex AI agent definitions
 │   ├── agents/             # Agent class implementations
 │   └── shared/             # Cross-agent utilities
-
+├── scripts/
+│   ├── deploy-agent.sh     # Deploy a Vertex AI agent (isolated .venv)
+│   └── setup-local.sh      # One-command local dev environment setup
+├── .env.example            # Environment variable template (root-level)
 ├── docker-compose.yml      # Local development stack (Postgres, Redis, API)
 ├── CONTRIBUTING.md         # Developer guide, standards, PR process
 ├── LICENSE                 # Project license
