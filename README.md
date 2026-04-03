@@ -94,7 +94,6 @@ cp api/.env.example api/.env
 | `GCP_LOCATION` | GCP region for Vertex AI | `us-central1` |
 | `GEMINI_MODEL_NAME` | Default model name (for telemetry reference) | `gemini-2.5-flash` |
 | `BRIEFING_AGENT_ENGINE_ID` | Reasoning Engine ID for the Briefing Agent | (none — set after deployment) |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Path to GCP service account key (Docker volume) | `/app/credentials/service-account.json` |
 | `LOG_LEVEL` | Python logging level | `INFO` |
 
 > [!IMPORTANT]
@@ -202,7 +201,7 @@ curl -X POST http://localhost:8000/api/v1/briefings/generate \
 | **Upsert Idempotency** | `(source_system, external_id)` as natural key — no duplicates |
 | **Error Sanitization** | `global_exception_handler` returns user-friendly messages, never stack traces |
 | **No .env in VCS** | `.gitignore` blocks `.env`, `.env.local`, `.env.prod` |
-| **GCP Auth** | ADC in production, service account key via Docker volume in dev |
+| **GCP Auth** | Application Default Credentials (ADC) — `gcloud auth` locally, attached service account on Cloud Run |
 
 ---
 
@@ -405,7 +404,7 @@ gemini-sales-accelerator-core/
 ├── intelligence/           # (Reserved) Vertex AI agent definitions
 │   ├── agents/             # Agent class implementations
 │   └── shared/             # Cross-agent utilities
-├── credentials/            # GCP service account keys (gitignored)
+
 ├── docker-compose.yml      # Local development stack (Postgres, Redis, API)
 ├── CONTRIBUTING.md         # Developer guide, standards, PR process
 ├── LICENSE                 # Project license
