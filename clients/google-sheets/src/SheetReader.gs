@@ -8,7 +8,7 @@
 
 /** Header aliases — maps canonical field names to accepted column headers. */
 var HEADER_ALIASES = {
-  companyName:       ['company name', 'account name', 'company', 'account', 'name'],
+  companyName:       ['company name', 'account name', 'client name', 'company', 'account', 'client', 'name'],
   website:           ['website', 'url', 'company website', 'web'],
   industry:          ['industry', 'vertical', 'sector'],
   type:              ['type', 'account type', 'lead type'],
