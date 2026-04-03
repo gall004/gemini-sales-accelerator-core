@@ -2,11 +2,13 @@
 
 Usage:
     python deploy.py --project-id YOUR_PROJECT_ID
+    python deploy.py --project-id YOUR_PROJECT_ID --staging-bucket gs://my-bucket
 
 Prerequisites:
     1. gcloud auth application-default login
     2. pip install -r requirements.txt
     3. Enable Vertex AI API in your GCP project
+    4. A GCS bucket for staging (auto-defaults to gs://{project_id}-gsa-staging)
 """
 
 import argparse
@@ -22,6 +24,7 @@ def deploy(
     location: str = "us-central1",
     model_name: str = "gemini-3-preview",
     display_name: str = "Briefing Agent",
+    staging_bucket: str | None = None,
 ) -> str:
     """Deploy the BriefingAgent to Vertex AI Reasoning Engine.
 
@@ -30,11 +33,21 @@ def deploy(
         location: GCP region for deployment.
         model_name: Gemini model name.
         display_name: Display name in the GCP console.
+        staging_bucket: GCS bucket for staging artifacts (gs://...).
+            Defaults to gs://{project_id}-gsa-staging.
 
     Returns:
         The Reasoning Engine resource name (contains the agent_id).
     """
-    vertexai.init(project=project_id, location=location)
+    if not staging_bucket:
+        staging_bucket = f"gs://{project_id}-gsa-staging"
+
+    print(f"   Staging bucket: {staging_bucket}")
+    vertexai.init(
+        project=project_id,
+        location=location,
+        staging_bucket=staging_bucket,
+    )
 
     agent = BriefingAgent(
         project_id=project_id,
@@ -84,6 +97,10 @@ if __name__ == "__main__":
         "--display-name", default="Briefing Agent",
         help="Display name in GCP console",
     )
+    parser.add_argument(
+        "--staging-bucket", default=None,
+        help="GCS bucket for staging (gs://...). Defaults to gs://{project-id}-gsa-staging",
+    )
     args = parser.parse_args()
 
     deploy(
@@ -91,4 +108,5 @@ if __name__ == "__main__":
         location=args.location,
         model_name=args.model_name,
         display_name=args.display_name,
+        staging_bucket=args.staging_bucket,
     )
