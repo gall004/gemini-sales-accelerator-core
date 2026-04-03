@@ -54,6 +54,9 @@ services:
       - "8000:8000"
     volumes:
       - ./api:/app
+      - ~/.config/gcloud:/root/.config/gcloud:ro
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
     env_file:
       - .env
     depends_on:
