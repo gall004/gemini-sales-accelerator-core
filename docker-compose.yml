@@ -54,22 +54,8 @@ services:
       - "8000:8000"
     volumes:
       - ./api:/app
-    environment:
-      # ── Database ──
-      DATABASE_URL: postgresql+asyncpg://gsa_user:gsa_local_password@postgres:5432/gsa_core
-      DATABASE_URL_SYNC: postgresql://gsa_user:gsa_local_password@postgres:5432/gsa_core
-      # ── Redis ──
-      REDIS_URL: redis://redis:6379/0
-      # ── Application ──
-      APP_ENV: development
-      API_KEY: gsa_dev_key_change_me_in_production
-      # ── GCP ──
-      GCP_PROJECT_ID: your-gcp-project-id
-      GCP_LOCATION: us-central1
-      GEMINI_MODEL_NAME: gemini-2.5-flash
-      # BRIEFING_AGENT_ENGINE_ID: (set after deploying an agent)
-      # ── Logging ──
-      LOG_LEVEL: DEBUG
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
