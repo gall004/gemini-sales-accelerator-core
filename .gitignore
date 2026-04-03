@@ -40,8 +40,6 @@ ENV/
 *.key
 *.p12
 *.jks
-credentials/
-**/service-account*.json
 
 # =========================
 # Docker

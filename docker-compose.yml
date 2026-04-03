@@ -54,7 +54,6 @@ services:
       - "8000:8000"
     volumes:
       - ./api:/app
-      - ./credentials:/app/credentials:ro
     environment:
       # ── Database ──
       DATABASE_URL: postgresql+asyncpg://gsa_user:gsa_local_password@postgres:5432/gsa_core
@@ -68,7 +67,6 @@ services:
       GCP_PROJECT_ID: your-gcp-project-id
       GCP_LOCATION: us-central1
       GEMINI_MODEL_NAME: gemini-2.5-flash
-      GOOGLE_APPLICATION_CREDENTIALS: /app/credentials/service-account.json
       # BRIEFING_AGENT_ENGINE_ID: (set after deploying an agent)
       # ── Logging ──
       LOG_LEVEL: DEBUG
