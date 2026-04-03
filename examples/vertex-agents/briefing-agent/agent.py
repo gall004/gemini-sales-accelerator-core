@@ -92,8 +92,8 @@ class BriefingAgent:
     def __init__(
         self,
         project_id: str,
-        location: str = "global",
-        model_name: str = "gemini-3-preview",
+        location: str = "us-central1",
+        model_name: str = "gemini-2.5-flash",
     ):
         """Initialize the agent.
 
@@ -109,19 +109,18 @@ class BriefingAgent:
     def set_up(self):
         """Called once when the Reasoning Engine container starts."""
         import vertexai
-        from google.cloud.aiplatform_v1beta1 import Tool as GapicTool
-        from vertexai.preview.generative_models import GenerativeModel, Tool
+        from vertexai.generative_models import GenerativeModel, Tool
 
         vertexai.init(project=self.project_id, location=self.location)
 
-        search_tool = Tool._from_gapic(
-            raw_tool=GapicTool(google_search=GapicTool.GoogleSearch())
+        google_search_tool = Tool.from_google_search_retrieval(
+            google_search_retrieval=vertexai.generative_models.grounding.GoogleSearchRetrieval()
         )
 
         self.model = GenerativeModel(
             model_name=self.model_name,
             system_instruction=SYSTEM_INSTRUCTION,
-            tools=[search_tool],
+            tools=[google_search_tool],
         )
 
     def query(self, input: str, **kwargs) -> dict:

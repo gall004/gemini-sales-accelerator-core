@@ -22,7 +22,7 @@ from agent import BriefingAgent
 def deploy(
     project_id: str,
     location: str = "us-central1",
-    model_name: str = "gemini-3-preview",
+    model_name: str = "gemini-2.5-flash",
     display_name: str = "Briefing Agent",
     staging_bucket: str | None = None,
 ) -> str:
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         "--location", default="us-central1", help="GCP region"
     )
     parser.add_argument(
-        "--model-name", default="gemini-3-preview",
+        "--model-name", default="gemini-2.5-flash",
         help="Gemini model name",
     )
     parser.add_argument(
