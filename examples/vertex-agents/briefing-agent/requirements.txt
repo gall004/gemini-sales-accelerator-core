@@ -1,0 +1,2 @@
+# Briefing Agent — Vertex AI Agent Engine Dependencies
+google-cloud-aiplatform[reasoningengine,langchain]>=1.86.0

@@ -98,8 +98,58 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
+from unittest.mock import AsyncMock, patch  # noqa: E402
+
+# ── Mock Agent Response ──────────────────────────────────────────────────────
+
+MOCK_AGENT_RESPONSE = {
+    "briefing": (
+        "### Strategic Overview\n"
+        "Acme Corp is aggressively expanding its cloud infrastructure.\n\n"
+        "### High-Impact Discovery Questions\n"
+        "1. **How** is your team evaluating vendor consolidation?\n"
+        "2. **What** KPIs are driving your digital transformation?\n"
+        "3. **Why** has the board prioritized AI adoption this quarter?"
+    ),
+    "contactBriefing": (
+        "### Strategic Account Summary\n"
+        "- Jane Doe leads engineering transformation.\n\n"
+        "### Recommended Opening\n"
+        "Your recent infrastructure review suggests urgency."
+    ),
+    "p2bScore": 78,
+    "accountSignal": "Expanding cloud spend by 40% YoY.",
+    "whyWeMatter": "Our platform cuts integration time by 60%.",
+    "anticipatedObjection": "We already have an in-house solution.",
+    "objectionPivot": "Most teams find they save 200+ engineering hours.",
+    "suggestedContacts": [
+        {"title": "VP of Engineering", "reason": "Technical decision maker"},
+        {"title": "CFO", "reason": "Budget authority for cloud spend"},
+    ],
+}
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def mock_agent_client():
+    """Patch agent_client.query_reasoning_engine for all tests.
+
+    Returns a realistic structured JSON response so tests validate
+    the full pipeline without real Vertex AI calls.
+    """
+    mock_result = {
+        "output": MOCK_AGENT_RESPONSE.copy(),
+        "latency_ms": 1234,
+    }
+    with patch(
+        "app.services.briefing_service.query_reasoning_engine",
+        new_callable=AsyncMock,
+        return_value=mock_result,
+    ) as mock_fn:
+        yield mock_fn
+
 
 # ── Auth Header Helper ──────────────────────────────────────────────────────
 
 VALID_API_KEY = "test_api_key_12345"
 AUTH_HEADERS = {"X-API-Key": VALID_API_KEY}
+

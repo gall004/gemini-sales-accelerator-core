@@ -19,9 +19,9 @@ psycopg2-binary>=2.9.0,<3.0.0
 # ── Cache ──
 redis>=5.0.0,<6.0.0
 
-# ── Google Cloud (placeholder — activated in Phase 2) ──
-# google-cloud-aiplatform>=1.60.0
-# google-auth>=2.29.0
+# ── Google Cloud ──
+google-cloud-aiplatform>=1.86.0
+google-auth>=2.29.0
 
 # ── Utilities ──
 python-dotenv>=1.0.0,<2.0.0

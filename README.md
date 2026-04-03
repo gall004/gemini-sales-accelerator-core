@@ -22,15 +22,15 @@ A headless AI Enterprise Platform that generates AI-powered Strategic Sales Brie
 
 | Feature | Description | Status |
 |---|---|---|
-| **AI Strategic Briefings** | Strategic summary, discovery questions, anticipated objections, and a recommended opening — generated per Account, Contact, or Opportunity | ✅ Implemented |
-| **P2B Scoring & Account Signal** | AI-generated Propensity to Buy score (0–100) with a contextual Account Signal | ✅ Schema Ready |
-| **Multi-Tenant Campaign Context** | Dynamic `campaign_context` field personalizes "Why We Matter" and objection handling per client team's product focus | ✅ Implemented |
-| **Inline Data Upsert** | CRM data passed inline per-request — upserted idempotently via `(source_system, external_id)` natural key | ✅ Implemented |
-| **TTL-Based Briefing Cache** | Configurable cache expiration prevents redundant AI calls. Force-refresh available on demand | ✅ Implemented |
-| **Buying Committee Suggestions** | AI-suggested buyer personas with titles and relevance reasons | ✅ Schema Ready |
-| **Deal Coach Analysis** | "Why We Matter", anticipated objection, and strategic pivot — all personalized to the contact's role | ✅ Schema Ready |
-| **Multi-Source Identity** | Accounts from Salesforce, Google Sheets, HubSpot, or custom systems are deduplicated by `(source_system, external_id)` | ✅ Implemented |
-| **AI Usage Logging** | Token usage, latency, cache hit rate, and error tracking for every agent call | ✅ Schema Ready |
+| **AI Strategic Briefings** | Strategic summary, discovery questions, anticipated objections, and a recommended opening — generated per Account, Contact, or Opportunity | ✅ Live |
+| **Reasoning Engine Proxy** | API routes requests to tenant-deployed Vertex AI Reasoning Engines via `agent_id` — no AI logic in the API layer | ✅ Live |
+| **P2B Scoring & Account Signal** | AI-generated Propensity to Buy score (0–100) with a contextual Account Signal | ✅ Live |
+| **Multi-Tenant Campaign Context** | Dynamic `campaign_context` field personalizes "Why We Matter" and objection handling per client team's product focus | ✅ Live |
+| **Dynamic Agent Routing** | `agent_id` resolved from request payload → `platform_config` → env var fallback | ✅ Live |
+| **Inline Data Upsert** | CRM data passed inline per-request — upserted idempotently via `(source_system, external_id)` natural key | ✅ Live |
+| **TTL-Based Briefing Cache** | Configurable cache expiration prevents redundant AI calls. Force-refresh available on demand | ✅ Live |
+| **AI Usage Telemetry** | Token usage, latency, agent_id, cache hit rate, and error tracking logged to `ai_usage_logs` | ✅ Live |
+| **Graceful Degradation** | Agent failures return a degraded briefing (not 500). Missing agent config returns a placeholder | ✅ Live |
 | **Google Sheets Client** | TTEC Digital branded sidebar — highlight a row, generate a briefing, never leave the spreadsheet | ✅ Implemented |
 
 ---
@@ -46,15 +46,21 @@ A headless AI Enterprise Platform that generates AI-powered Strategic Sales Brie
 │ • Salesforce (future)│      │ • PostgreSQL 15      │      │ • Chat Agent         │
 │ • Custom Web Apps    │      │ • Redis 7            │      │ • (Future Agents)    │
 └──────────────────────┘      └──────────────────────┘      └──────────────────────┘
+                                      │                              ▲
+                                      │  Proxy Architecture          │
+                                      │  No AI logic in Tier 2       │
+                                      └──────────────────────────────┘
+                                        Upsert → Cache → Route →
+                                        Parse → Log → Cache → Return
 ```
 
-**Strict layer isolation** (architecture.md §4): `clients/` ↛ `api/` ↛ `intelligence/`. Cross-tier communication via HTTP only. No direct Python imports across boundaries.
+**The API is a proxy, NOT the brain.** System prompts, model selection, and `generate_content` calls live exclusively in deployed Reasoning Engines (Tier 3). The API's job: upsert CRM data, check cache, route to the correct agent via `agent_id`, parse the response, log telemetry, and cache the result.
 
 | Layer | Responsibility | Tech Stack |
 |---|---|---|
 | **Presentation** | User-facing frontends — send data, render results | Google Apps Script, HTML, JavaScript |
-| **Core API** | REST endpoints, auth, database, caching, business logic | Python 3.12, FastAPI, SQLAlchemy 2.0, asyncpg, Redis |
-| **Intelligence** | AI agent orchestration, Vertex AI integration | Vertex AI Agent Engine, Gemini models |
+| **Core API** | REST proxy, auth, database, caching, telemetry | Python 3.12, FastAPI, SQLAlchemy 2.0, asyncpg, Redis |
+| **Intelligence** | Tenant-deployed Reasoning Engines with AI logic | Vertex AI Agent Engine, Gemini models, Google Search |
 
 ---
 
@@ -86,6 +92,9 @@ cp api/.env.example api/.env
 | `APP_ENV` | Environment name (`development`, `test`, `production`) | `development` |
 | `GCP_PROJECT_ID` | Google Cloud project ID | `your-gcp-project-id` |
 | `GCP_LOCATION` | GCP region for Vertex AI | `us-central1` |
+| `GEMINI_MODEL_NAME` | Default model name (for telemetry reference) | `gemini-2.5-flash` |
+| `BRIEFING_AGENT_ENGINE_ID` | Reasoning Engine ID for the Briefing Agent | (none — set after deployment) |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path to GCP service account key (Docker volume) | `/app/credentials/service-account.json` |
 | `LOG_LEVEL` | Python logging level | `INFO` |
 
 > [!IMPORTANT]
@@ -156,7 +165,8 @@ curl -X POST http://localhost:8000/api/v1/briefings/generate \
     },
     "campaign_context": "Google Actions Center Integrations for Event Ticketing",
     "source_system": "google_sheets",
-    "external_id": "row_5"
+    "external_id": "row_5",
+    "agent_id": "5864266157464223744"
   }'
 ```
 
@@ -294,16 +304,17 @@ docker compose exec postgres psql -U gsa_user -d postgres \
 
 ### Coverage Target
 
-≥85% aggregate coverage across `api/app/` (currently at **86%**).
+≥85% aggregate coverage across `api/app/` (currently at **85%**).
 
 ### Test Matrix
 
 | Test File | Tests | Category |
 |---|---|---|
 | `test_health.py` | 1 | Health endpoint |
-| `test_briefings.py` | 12 | Happy path, cache, upsert, sad path, auth |
+| `test_briefings.py` | 16 | AI briefing, cache, agent routing, degradation, upsert, auth |
+| `test_agent_client.py` | 10 | Response parsing, SDK invocation, timeout, errors |
 | `test_schemas.py` | 12 | Pydantic validation, edge cases, max_length |
-| **Total** | **25** | **86% coverage** |
+| **Total** | **39** | **85% coverage** |
 
 ---
 
@@ -369,9 +380,13 @@ gemini-sales-accelerator-core/
 │   │   ├── models/         # SQLAlchemy ORM models (6 tables)
 │   │   ├── routers/        # FastAPI route handlers (thin transport only)
 │   │   ├── schemas/        # Pydantic request/response models
-│   │   ├── services/       # Business logic (briefing_service.py)
+│   │   ├── services/       # Business logic layer
+│   │   │   ├── account_service.py   # Account upsert logic
+│   │   │   ├── agent_client.py      # Vertex AI Reasoning Engine SDK client
+│   │   │   ├── briefing_service.py  # Briefing orchestration (proxy to agents)
+│   │   │   └── telemetry.py         # AI usage logging to ai_usage_logs
 │   │   └── utils/          # Shared utilities
-│   ├── tests/              # pytest test suite (25 tests, 86% coverage)
+│   ├── tests/              # pytest test suite (39 tests, 85% coverage)
 │   ├── .env.example        # Environment variable template
 │   ├── Dockerfile          # Dev container (Python 3.12-slim)
 │   ├── pyproject.toml      # Pytest configuration
@@ -381,9 +396,16 @@ gemini-sales-accelerator-core/
 │       ├── src/            # Server-side GS modules (5 files)
 │       ├── views/          # HTML sidebar & settings dialog
 │       └── README.md       # Client-specific setup instructions
-├── intelligence/           # (Phase 3) Vertex AI agent definitions
+├── examples/
+│   └── vertex-agents/      # Reference agent implementations for tenants
+│       └── briefing-agent/ # Briefing Agent (gemini-3-preview + Google Search)
+│           ├── agent.py    # Agent class with system prompt
+│           ├── deploy.py   # CLI deployment to Reasoning Engine
+│           └── README.md   # Setup, output schema contract, customization
+├── intelligence/           # (Reserved) Vertex AI agent definitions
 │   ├── agents/             # Agent class implementations
 │   └── shared/             # Cross-agent utilities
+├── credentials/            # GCP service account keys (gitignored)
 ├── docker-compose.yml      # Local development stack (Postgres, Redis, API)
 ├── CONTRIBUTING.md         # Developer guide, standards, PR process
 ├── LICENSE                 # Project license
