@@ -112,10 +112,11 @@ class BriefingAgent:
         from google import genai
         from google.genai import types
 
+        model_location = "global" if "gemini-3" in self.model_name else self.location
         self.client = genai.Client(
             vertexai=True,
             project=self.project_id,
-            location=self.location,
+            location=model_location,
         )
         self.types = types
 
@@ -135,7 +136,7 @@ class BriefingAgent:
             thinking_config=self.types.ThinkingConfig(
                 thinking_level=self.types.ThinkingLevel.HIGH,
             ),
-            google_search=self.types.GoogleSearch(),
+            tools=[self.types.Tool(google_search=self.types.GoogleSearch())],
         )
 
         response = self.client.models.generate_content(
