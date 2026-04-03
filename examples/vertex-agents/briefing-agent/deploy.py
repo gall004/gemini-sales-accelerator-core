@@ -22,7 +22,7 @@ from agent import BriefingAgent
 def deploy(
     project_id: str,
     location: str = "us-central1",
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-3-flash-preview",
     display_name: str = "Briefing Agent",
     staging_bucket: str | None = None,
 ) -> str:
@@ -59,6 +59,7 @@ def deploy(
         agent,
         requirements=[
             "google-cloud-aiplatform[reasoningengine,langchain]>=1.86.0",
+            "google-genai>=1.51.0",
         ],
         display_name=display_name,
         description=(
@@ -90,7 +91,7 @@ if __name__ == "__main__":
         "--location", default="us-central1", help="GCP region"
     )
     parser.add_argument(
-        "--model-name", default="gemini-2.5-flash",
+        "--model-name", default="gemini-3-flash-preview",
         help="Gemini model name",
     )
     parser.add_argument(

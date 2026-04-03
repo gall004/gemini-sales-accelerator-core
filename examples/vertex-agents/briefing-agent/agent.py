@@ -85,21 +85,22 @@ SYSTEM_INSTRUCTION = """<role>
 class BriefingAgent:
     """Vertex AI Agent Engine agent for structured sales intelligence.
 
-    Generates strategic briefings with Google Search grounding.
+    Generates strategic briefings with Google Search grounding using the
+    google-genai SDK with Gemini 3 Flash thinking mode.
     Deployed via deploy.py to Vertex AI Reasoning Engine.
     """
 
     def __init__(
         self,
         project_id: str,
-        location: str = "us-central1",
-        model_name: str = "gemini-2.5-flash",
+        location: str = "global",
+        model_name: str = "gemini-3-flash-preview",
     ):
         """Initialize the agent.
 
         Args:
             project_id: GCP project ID.
-            location: GCP region for model invocation.
+            location: GCP region. Must be 'global' for Gemini 3 preview.
             model_name: Gemini model to use for generation.
         """
         self.project_id = project_id
@@ -108,20 +109,15 @@ class BriefingAgent:
 
     def set_up(self):
         """Called once when the Reasoning Engine container starts."""
-        import vertexai
-        from vertexai.generative_models import GenerativeModel, Tool
+        from google import genai
+        from google.genai import types
 
-        vertexai.init(project=self.project_id, location=self.location)
-
-        google_search_tool = Tool.from_google_search_retrieval(
-            google_search_retrieval=vertexai.generative_models.grounding.GoogleSearchRetrieval()
+        self.client = genai.Client(
+            vertexai=True,
+            project=self.project_id,
+            location=self.location,
         )
-
-        self.model = GenerativeModel(
-            model_name=self.model_name,
-            system_instruction=SYSTEM_INSTRUCTION,
-            tools=[google_search_tool],
-        )
+        self.types = types
 
     def query(self, input: str, **kwargs) -> dict:
         """Generate a structured intelligence briefing.
@@ -134,7 +130,19 @@ class BriefingAgent:
         """
         import json
 
-        response = self.model.generate_content(input)
+        config = self.types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTION,
+            thinking_config=self.types.ThinkingConfig(
+                thinking_level=self.types.ThinkingLevel.HIGH,
+            ),
+            google_search=self.types.GoogleSearch(),
+        )
+
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=input,
+            config=config,
+        )
 
         try:
             parsed = self._parse_json_response(response.text)
