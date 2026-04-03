@@ -162,6 +162,16 @@ class BriefingGenerateRequest(BaseModel):
             "Cisco Contact Center Modernization with AI Agent Assist",
         ],
     )
+    agent_id: str | None = Field(
+        default=None,
+        max_length=255,
+        description=(
+            "Vertex AI Reasoning Engine ID to invoke. If omitted, the API "
+            "resolves from platform_config (key: default_briefing_agent_id) "
+            "or the BRIEFING_AGENT_ENGINE_ID environment variable."
+        ),
+        examples=["5864266157464223744"],
+    )
 
     @field_validator("entity_type")
     @classmethod

@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     gcp_location: str = "us-central1"
     briefing_agent_engine_id: str | None = None
     chat_agent_engine_id: str | None = None
+    gemini_model_name: str = "gemini-2.5-flash"
 
     # ── Briefing Cache ───────────────────────────────────────────────────
     briefing_cache_ttl_days: int = 7
