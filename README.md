@@ -94,6 +94,8 @@ cp .env.example .env
 | `GCP_LOCATION` | GCP region for Vertex AI | `us-central1` |
 | `GEMINI_MODEL_NAME` | Default model name (for telemetry reference) | `gemini-2.5-flash` |
 | `BRIEFING_AGENT_ENGINE_ID` | Reasoning Engine ID for the Briefing Agent | (none — set after deployment) |
+| `NGROK_AUTHTOKEN` | ngrok auth token for public tunnel (optional) | (none — tunnel disabled) |
+| `NGROK_DOMAIN` | Static ngrok domain for stable URL (optional) | (none — random URL) |
 | `LOG_LEVEL` | Python logging level | `INFO` |
 
 > [!IMPORTANT]
@@ -124,6 +126,9 @@ This spins up:
 | **PostgreSQL 15** | `gsa-postgres` | `5432` | `5432` |
 | **Redis 7** | `gsa-redis` | `6380` | `6379` |
 | **FastAPI API** | `gsa-api` | `8000` | `8000` |
+| **ngrok** *(optional)* | `gsa-ngrok` | `4040` (dashboard) | — |
+
+ngrok starts automatically if `NGROK_AUTHTOKEN` is set in `.env`. The public URL is visible at http://localhost:4040.
 
 Code changes in `api/` are hot-reloaded automatically via volume mount + `uvicorn --reload`.
 

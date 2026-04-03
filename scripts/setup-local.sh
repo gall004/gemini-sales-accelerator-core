@@ -50,9 +50,37 @@ if ! docker info &> /dev/null; then
 fi
 echo "✅ Docker is running"
 
-# ── Step 3: Build and start ──
+# ── Step 3: Detect ngrok tunnel ──
+COMPOSE_PROFILES=""
 echo ""
-echo "🐳 Starting services (Postgres, Redis, API)..."
-echo ""
-docker compose up --build
+if grep -q "^NGROK_AUTHTOKEN=" .env 2>/dev/null; then
+    NGROK_TOKEN=$(grep "^NGROK_AUTHTOKEN=" .env | cut -d'=' -f2-)
+    if [[ -n "$NGROK_TOKEN" && "$NGROK_TOKEN" != "your_ngrok_authtoken_here" ]]; then
+        COMPOSE_PROFILES="tunnel"
+        echo "🌐 ngrok tunnel enabled (NGROK_AUTHTOKEN found in .env)"
+        echo "   Dashboard: http://localhost:4040"
+        # Show static domain if configured
+        if grep -q "^NGROK_DOMAIN=" .env 2>/dev/null; then
+            NGROK_DOMAIN_VAL=$(grep "^NGROK_DOMAIN=" .env | cut -d'=' -f2-)
+            if [[ -n "$NGROK_DOMAIN_VAL" && "$NGROK_DOMAIN_VAL" != "your-name.ngrok-free.app" ]]; then
+                echo "   Public URL: https://$NGROK_DOMAIN_VAL"
+            fi
+        fi
+    else
+        echo "ℹ️  ngrok disabled (NGROK_AUTHTOKEN not configured)"
+    fi
+else
+    echo "ℹ️  ngrok disabled (NGROK_AUTHTOKEN not set in .env)"
+fi
 
+# ── Step 4: Build and start ──
+echo ""
+if [[ -n "$COMPOSE_PROFILES" ]]; then
+    echo "🐳 Starting services (Postgres, Redis, API, ngrok)..."
+    echo ""
+    COMPOSE_PROFILES="$COMPOSE_PROFILES" docker compose up --build
+else
+    echo "🐳 Starting services (Postgres, Redis, API)..."
+    echo ""
+    docker compose up --build
+fi

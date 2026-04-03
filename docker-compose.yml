@@ -62,6 +62,30 @@ services:
       redis:
         condition: service_healthy
 
+  # ─── ngrok Tunnel (optional) ───────────────────────────────────────────
+  # Exposes the API to the internet for Google Sheets / webhook testing.
+  # Set NGROK_AUTHTOKEN in .env to enable. Get yours at: https://ngrok.com
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: gsa-ngrok
+    restart: unless-stopped
+    profiles:
+      - tunnel
+    ports:
+      - "4040:4040"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+      NGROK_DOMAIN: ${NGROK_DOMAIN:-}
+    entrypoint: /bin/sh
+    command: >
+      -c "if [ -n \"$$NGROK_DOMAIN\" ]; then
+        ngrok http api:8000 --log stdout --domain $$NGROK_DOMAIN;
+      else
+        ngrok http api:8000 --log stdout;
+      fi"
+    depends_on:
+      - api
+
 volumes:
   pgdata:
     driver: local
